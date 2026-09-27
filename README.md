@@ -1,6 +1,6 @@
 # 租金計算器（GitHub Pages 版）
 
-這是現有租金計算器的完整靜態網站。上傳到 GitHub Pages 後，網址不再使用 chatgpt.site。
+這是現有租金計算器的完整靜態網站。水費用量與金額由使用者手填，電費按讀數計算。2 樓樓梯燈費預設為 $0。iPhone/iPad 可透過分享選單或長按圖片存入「照片」App。上傳到 GitHub Pages 後，網址不再使用 chatgpt.site。
 
 ## 發佈步驟
 

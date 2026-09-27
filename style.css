@@ -27,4 +27,6 @@
 .bill-table thead th:nth-child(2),.bill-table .previous-reading input,.bill-table .previous-reading::before{color:#b32c26!important}
 .bill-table .previous-reading input{border-color:#b32c26;font-weight:800}
 .selected-unit{display:none}
+.image-save-hint{min-height:1.2em;color:#a63b31;font-weight:700;margin:12px 0 0}
 @media(max-width:760px){.selected-unit{display:block;white-space:normal;overflow-wrap:anywhere;color:#a63b31;font-size:1.02rem;font-weight:800;line-height:1.3;margin-top:2px}}
+@media(max-width:760px){.bill-table .water-row td:nth-child(5){display:none}}
