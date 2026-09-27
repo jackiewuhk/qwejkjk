@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f2db">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="租金计算">
+  <meta name="description" content="按水电表读数计算每月租金，支持离线使用。">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='9' fill='%23f7f2db'/%3E%3Crect x='7' y='8' width='50' height='48' fill='none' stroke='%23292b24' stroke-width='3'/%3E%3Cpath d='M7 24h50M24 24v32M41 24v32M7 40h50' stroke='%23292b24' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./app.js" defer></script>
+  <title>租金计算器</title>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div><p class="eyebrow">每月租单</p><h1>租金计算器</h1></div>
+      <button type="button" class="help-button" id="installButton">加入主屏幕</button>
+    </header>
+
+    <section class="sheet" aria-label="租金计算表">
+      <div class="sheet-head">
+        <label class="field unit-field">租用地址
+          <select id="unit"><option value="6栋1楼前座">6栋1楼前座</option><option value="6栋1楼后座">6栋1楼后座</option><option value="6栋2楼201/202楼全座">6栋2楼201/202楼全座</option><option value="6栋3楼顶座">6栋3楼顶座</option><option value="充电桩">充电桩</option><option value="公用电">公用电</option></select><output id="selectedUnit" class="selected-unit" aria-live="polite"></output>
+        </label>
+        <div class="date-fields">
+          <label class="field">计费由 <input id="startDate" type="date"></label>
+          <label class="field">至 <input id="endDate" type="date"></label>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="bill-table">
+          <thead><tr><th scope="col">项目</th><th scope="col">上月读数</th><th scope="col">本月读数</th><th scope="col">用量</th><th scope="col">单价</th><th scope="col">金额</th></tr></thead>
+          <tbody>
+            <tr class="water-row"><th scope="row">水费 <small>立方米</small></th><td class="previous-reading" data-label="上月读数"><input aria-label="上月水表读数" id="waterPrevious" type="number" inputmode="decimal" min="0" step="any" placeholder="输入"></td><td data-label="本月读数"><input aria-label="本月水表读数" id="waterCurrent" type="number" inputmode="decimal" min="0" step="any" placeholder="输入"></td><td data-label="用量" class="computed" id="waterUsage">—</td><td data-label="单价"><label class="rate-label">$<input aria-label="每立方米水费" id="waterRate" type="number" inputmode="decimal" min="0" step="any" value="5"></label></td><td data-label="金额" class="money" id="waterAmount">—</td></tr>
+            <tr><th scope="row">电费 <small>度</small></th><td class="previous-reading" data-label="上月读数"><input aria-label="上月电表读数" id="electricPrevious" type="number" inputmode="decimal" min="0" step="any" placeholder="输入"></td><td data-label="本月读数"><input aria-label="本月电表读数" id="electricCurrent" type="number" inputmode="decimal" min="0" step="any" placeholder="输入"></td><td data-label="用量" class="computed" id="electricUsage">—</td><td data-label="单价"><label class="rate-label">$<input aria-label="每度电费" id="electricRate" type="number" inputmode="decimal" min="0" step="any" value="0.7"></label></td><td data-label="金额" class="money" id="electricAmount">—</td></tr>
+            <tr class="fixed residential-fee"><th scope="row">租金</th><td colspan="3" class="row-note" id="periodLabel">每月租金</td><td><label class="rate-label">$<input aria-label="每月租金" id="rent" type="number" inputmode="decimal" min="0" step="any" value="440"></label></td><td class="money" id="rentAmount">$440</td></tr>
+            <tr class="fixed residential-fee"><th scope="row">楼梯灯</th><td colspan="4" class="row-note">每月</td><td><label class="rate-label money-input">$<input aria-label="楼梯灯费" id="stairs" type="number" inputmode="decimal" min="0" step="any" value="5"></label></td></tr>
+            <tr class="fixed residential-fee"><th scope="row">卫生费</th><td colspan="4" class="row-note">每月</td><td><label class="rate-label money-input">$<input aria-label="卫生费" id="cleaning" type="number" inputmode="decimal" min="0" step="any" value="15"></label></td></tr>
+            <tr class="fixed residential-fee"><th scope="row">有线电视</th><td colspan="4" class="row-note">如适用</td><td><label class="rate-label money-input">$<input aria-label="有线电视费" id="tv" type="number" inputmode="decimal" min="0" step="any" value="0"></label></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="error" class="error" role="alert" hidden></p>
+      <div class="total-band"><span>合计</span><strong id="total">—</strong></div>
+      <div class="actions"><button id="imageButton" class="primary" type="button">保存租单图片</button><button id="saveButton" type="button">保存本月读数</button></div>
+      <p id="status" class="status" role="status"></p>
+    </section>
+    <p class="footnote" id="footnote">水电金额按元四舍五入。租金按整月计算，不因日期自动分摊。资料只保存在这部设备。</p>
+  </main>
+  <dialog id="installDialog"><div class="dialog-body"><h2>加入主屏幕及离线使用</h2><p>在 iPhone 或 iPad 的 Safari 打开此页，点“分享”，再选“加入主屏幕”。首次打开时保持联网，之后可离线计算及制作图片。</p><button id="closeDialog" type="button" class="primary">明白</button></div></dialog>
+  <dialog id="imageDialog" class="image-dialog"><div class="dialog-body"><h2>租单图片</h2><p>可点下方按钮，在分享菜单选“储存图像”；也可长按图片保存至相册。</p><img id="billPreview" alt="根据已填资料制作的横向租金单图片"><div class="dialog-actions"><button id="downloadImage" type="button" class="primary">分享／保存图像</button><button id="closeImage" type="button">返回</button></div></div></dialog>
+</body>
+</html>
