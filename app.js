@@ -96,38 +96,55 @@
   function makeBillCanvas(result) {
     const canvas = document.createElement('canvas'); canvas.width = 2100; canvas.height = 1250;
     const c = canvas.getContext('2d');
-    c.fillStyle = '#fffdf4'; c.fillRect(0,0,2100,1250);
-    c.fillStyle = '#252720'; c.textBaseline = 'middle';
-    const label = (text,x,y,size=43,weight='500',align='center',max=1000,color='#252720') => {
-      c.fillStyle=color; c.font=`${weight} ${size}px "PingFang SC","Noto Sans SC",sans-serif`;
+    c.fillStyle = '#ffffff'; c.fillRect(0,0,canvas.width,canvas.height);
+    c.textBaseline = 'middle';
+    const label = (text,x,y,size=43,weight='500',align='center',max=1000) => {
+      c.fillStyle='#111111'; c.font=`${weight} ${size}px "Songti TC","Songti SC","Noto Serif CJK TC","PMingLiU",serif`;
       c.textAlign=align; c.fillText(String(text),x,y,max);
     };
-    label('租　单',1050,88,76,'700');
-    label(`租用地址：${fields.unit.value}`,100,184,45,'600','left',1250);
-    label(`日期：${fields.endDate.value.replaceAll('-',' / ')}`,2000,184,43,'500','right',650);
-    const widths=[245,260,200,220,190,230,230,325];
-    const xs=[100]; for(const width of widths) xs.push(xs.at(-1)+width);
-    const heights=[82,132,132,113,96,96,96,125];
-    const ys=[260]; for(const height of heights) ys.push(ys.at(-1)+height);
-    c.strokeStyle='#2e302b'; c.lineWidth=4;
-    for (const x of xs) { c.beginPath(); c.moveTo(x,ys[0]); c.lineTo(x,ys.at(-1)); c.stroke(); }
-    for (const y of ys) { c.beginPath(); c.moveTo(xs[0],y); c.lineTo(xs.at(-1),y); c.stroke(); }
-    const center=(col,row)=>[(xs[col]+xs[col+1])/2,(ys[row]+ys[row+1])/2];
-    const cell=(col,row,text,size=41,weight='500',color='#252720')=>{const [x,y]=center(col,row);label(text,x,y,size,weight,'center',widths[col]-18,color);};
-    ['项目','金额（元）','单价（元）','用量','单位','上月读数','本月读数','日期'].forEach((s,i)=>cell(i,0,s,38,'700',i===5?'#b32c26':'#252720'));
-    const month = fields.endDate.value.slice(5,7).replace(/^0/,'')+'月份';
+    const money = value => Number.isInteger(value) ? String(value) : value.toFixed(2);
+    const dateParts = value => value.split('-').map(Number);
+    const [year,month,day] = dateParts(fields.endDate.value);
+    const [startYear,startMonth,startDay] = dateParts(fields.startDate.value);
+    const utility = electricOnly();
+    label('租　　單',1050,80,78,'700');
+    label('NO.',1590,95,48,'700','left',320);
+    label(`租用地址：${fields.unit.value}`,65,202,43,'600','left',1250);
+    label(`日期：${year}年 ${month}月 ${day}日`,2035,202,41,'500','right',670);
+
+    // Draw borders by row span: merged receipt cells must not contain vertical rules.
+    const xs=[65,305,565,825,980,1165,1375,1590,1830,2035];
+    const ys=[250,355,450,545,650,745,840,935,1040,1130];
+    c.strokeStyle='#111111'; c.lineWidth=3;
+    const line=(x1,y1,x2,y2)=>{c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();};
+    ys.forEach(y=>line(xs[0],y,xs[9],y));
+    [0,9].forEach(col=>line(xs[col],ys[0],xs[col],ys[9]));
+    [1,2].forEach(col=>line(xs[col],ys[0],xs[col],ys[8]));
+    [3,4,5,6,7].forEach(col=>line(xs[col],ys[0],xs[col],ys[3]));
+    line(xs[3],ys[3],xs[3],ys[4]);
+    line(xs[8],ys[1],xs[8],ys[7]);
+    const cell=(col,row,text,size=42,weight='500',end=col+1)=>label(text,(xs[col]+xs[end])/2,(ys[row]+ys[row+1])/2,size,weight,'center',xs[end]-xs[col]-24);
+    ['項　目','金額（元）','單價（元）','用量','單位','上　月','本　月'].forEach((text,col)=>cell(col,0,text,39,'700'));
+    cell(7,0,'日　期',40,'700',9);
     const entries=[
-      ['水费',electricOnly()?'—':currency(result.water),electricOnly()?'':fields.waterRate.value,electricOnly()?'':fields.waterUsage.value,electricOnly()?'':'立方米',electricOnly()?'':fields.waterPrevious.value,electricOnly()?'':fields.waterCurrent.value,electricOnly()?'':month],
-      ['电费',currency(result.electric),fields.electricRate.value,result.readings.electric,'度',fields.electricPrevious.value,fields.electricCurrent.value,month],
-      ['租金',electricOnly()?'—':currency(amount('rent')),electricOnly()?'':'计费日期',electricOnly()?'':`${fields.startDate.value.slice(5)} 至`,electricOnly()?'':fields.endDate.value.slice(5),'','',electricOnly()?'':month],
-      ['楼梯灯',electricOnly()?'—':currency(amount('stairs')),'','','','','',electricOnly()?'':month],
-      ['卫生费',electricOnly()?'—':currency(amount('cleaning')),'','','','','',electricOnly()?'':month],
-      ['有线电视',electricOnly()?'—':amount('tv') ? currency(amount('tv')) : '—','','','','','',electricOnly()?'':month]
+      ['水　費',utility?'—':money(result.water),utility?'':fields.waterRate.value,utility?'':fields.waterUsage.value,utility?'':'立方米',utility?'':fields.waterPrevious.value,utility?'':fields.waterCurrent.value],
+      ['電　費',money(result.electric),fields.electricRate.value,result.readings.electric,'度',fields.electricPrevious.value,fields.electricCurrent.value]
     ];
-    entries.forEach((row,r)=>row.forEach((value,col)=>cell(col,r+1,value,col===3&&r===2?33:42,col<2?'600':'500',col===5?'#b32c26':'#252720')));
-    cell(0,7,'合计',51,'700'); cell(1,7,currency(result.total),61,'700','#a23a32');
-    label(`大写：${toChineseMoney(result.total)}`,xs[2]+25,(ys[7]+ys[8])/2,43,'600','left',xs[8]-xs[2]-45);
-    label(electricOnly()?'请核对电表读数及金额。':'请核对水电表读数及金额，并于每月 7 天前付清房租。',100,1192,35,'500','left',1880);
+    entries.forEach((row,r)=>row.forEach((value,col)=>cell(col,r+1,value,43,col===0?'700':'500')));
+    ['租　金','樓梯灯','卫生費','有线电视'].forEach((text,r)=>cell(0,r+3,text,43,'700'));
+    ['rent','stairs','cleaning','tv'].forEach((id,r)=>cell(1,r+3,utility?'—':id==='tv'&&!amount(id)?'':money(Math.round(amount(id))),45));
+    cell(2,3,'租住日期',40,'700');
+    const period = startYear===year ? `${startMonth} 月 ${startDay} 日至 ${month} 月 ${day} 日` : `${startYear}年${startMonth}月${startDay}日至${year}年${month}月${day}日`;
+    if (!utility) cell(3,3,period,startYear===year?42:32,'500',8);
+    for(let row=1;row<=6;row++) {
+      const applicable = !utility || row===2;
+      cell(8,row,applicable?`${month}月份`:'月份',39);
+    }
+    cell(0,7,'合　計',46,'700'); cell(1,7,money(result.total),51);
+    const uppercase = toChineseMoney(result.total).replaceAll('贰','貳').replaceAll('叁','參').replaceAll('陆','陸').replaceAll('万','萬').replaceAll('亿','億');
+    label(`大寫：${uppercase}`,xs[2]+25,(ys[7]+ys[8])/2,45,'600','left',xs[9]-xs[2]-50);
+    label(utility?'注：請核對電表讀數及金額。':'注：請各租客在每月7天前付清房租，否則將停水停電處理，謝謝合作！',xs[0]+28,(ys[8]+ys[9])/2,38,'700','left',xs[9]-xs[0]-56);
+    label('經手人：',1760,1193,42,'700','left',270);
     return canvas;
   }
   let billBlob = null, previewUrl = null;
